@@ -7,23 +7,13 @@
 """
 __author__ = 'Ben Johnston'
 
+import numpy as np
 import tensorflow as tf
+from PIL import Image, ImageDraw
 
 SEED = 0
 
-# def flip_lr(x, y, rate=0.8, seed=SEED):
-    
-#     if tf.random.uniform(shape=[], seed=seed) > rate:
-
-#         x_lr = tf.image.flip_left_right(x)
-#         _y = -1 * (y[:,0] - tf.shape(x)[0])
-#         y_lr = tf.stack((tf.transpose(_y), tf.transpose(y[:,1])), axis=1)
-
-#         return x_lr, y_lr
-#     else:
-#         return x, y
-
-def flip_lr(x, y, rate=0.5, seed=10):
+def flip_lr(x, y, rate=0.5, seed=SEED):
     
     if tf.random.uniform(shape=[], seed=seed) > rate:
 
@@ -34,31 +24,6 @@ def flip_lr(x, y, rate=0.5, seed=10):
         return x_lr, y_lr
     else:
         return x, y
-
-
-# def jitter(x, y, bbox, jitter=20, size=100, seed=SEED):
-
-#     offset = tf.random.uniform(
-#         shape=[2],
-#         minval=-jitter,
-#         maxval=jitter,
-#         dtype=tf.int32,
-#         seed=seed)
-
-#     new_bbox = bbox - offset
-    
-#     offset = tf.broadcast_to(tf.cast(new_bbox, dtype=tf.float32), [2, 2])
-#     y_crop = y - offset 
-    
-#     x_crop = tf.image.crop_to_bounding_box(
-#         x,
-#         offset_height=new_bbox[1],
-#         offset_width=new_bbox[0],
-#         target_width=size,
-#         target_height=size,        
-#     )
-    
-#     return x_crop, y_crop
 
 
 def jitter(x, y, bbox, jitter=30, size=100, seed=SEED):
@@ -103,11 +68,7 @@ def jitter(x, y, bbox, jitter=30, size=100, seed=SEED):
     
     tf.while_loop(while_condition, crop, [i])
 
-    y_crop = y_crop - (size / 2)
-    y_crop = y_crop / tf.keras.backend.max(y_crop)
-
-    y_crop = tf.reshape(y_crop, (batch_size, -1))
-    
+   
     return x_crop, y_crop
 
 
@@ -156,7 +117,22 @@ def augment_data(x, y, bbox, jit_rate=20, rate=0.5, size=100, seed=SEED):
 
     tf.while_loop(while_condition, _adjust, [i])
 
-    x_adjust = x_adjust / 255.0
-
     return x_adjust, y_aug
-    # return x_aug, y_aug
+
+def create_mask(y, width, height, radius=2):
+    
+    mask = Image.new("L", (width, height))
+    draw = ImageDraw.Draw(mask)
+    
+    for _y in y:
+        
+        draw.ellipse(
+            [
+                _y[0] - radius, _y[1] - radius,
+                _y[0] + radius, _y[1] + radius
+            ],
+            fill='white',
+            outline='white'
+        )
+        
+    return mask
