@@ -61,28 +61,46 @@ def load_data(dat_dir=EXTERNAL_DIR, nose_boxes=NOSE_BOXES, train_ratio=0.7, seed
 
     return x, y, z
 
-    # indices = list(range(len(x)))
-    # random.seed(seed)
-    # random.shuffle(indices)
 
-    # num_train = int(len(x) * train_ratio)
-    # train_idx = indices[:num_train]
-    # valid_idx = indices[num_train:]
+def load_tensors(data_dir, train_ratio=0.7, seed=0):
+
+    x, y = [], []
+
+    for filename in os.listdir(data_dir):
+
+        if '_mask' in filename:
+            continue
+
+        _img = imread(os.path.join(data_dir, filename))
+        mask_name = filename.replace('.png', '_mask.png')
+        _mask = imread(os.path.join(data_dir, mask_name))
+
+        x.append(_img)
+        y.append(_mask)
+
+    x = np.array(x)
+    y = np.array(y)
+
+    indices = list(range(len(x)))
+    random.seed(seed)
+    random.shuffle(indices)
+
+    num_train = int(len(x) * train_ratio)
+    train_idx = indices[:num_train]
+    valid_idx = indices[num_train:]
 
 
-    # train_ds = tf.data.Dataset.from_tensor_slices((
-    #     tf.convert_to_tensor(x[train_idx], dtype=tf.float32),
-    #     tf.convert_to_tensor(y[train_idx], dtype=tf.float32),
-    #     tf.convert_to_tensor(z[train_idx], dtype=tf.float32),
-    # ))
+    train_ds = tf.data.Dataset.from_tensor_slices((
+        tf.convert_to_tensor(x[train_idx], dtype=tf.float32),
+        tf.convert_to_tensor(y[train_idx], dtype=tf.float32),
+    ))
 
-    # valid_ds = tf.data.Dataset.from_tensor_slices((
-    #     tf.convert_to_tensor(x[valid_idx], dtype=tf.float32),
-    #     tf.convert_to_tensor(y[valid_idx], dtype=tf.float32),
-    #     tf.convert_to_tensor(z[valid_idx], dtype=tf.float32),
-    # ))
+    valid_ds = tf.data.Dataset.from_tensor_slices((
+        tf.convert_to_tensor(x[valid_idx], dtype=tf.float32),
+        tf.convert_to_tensor(y[valid_idx], dtype=tf.float32),
+    ))
 
-    # return train_ds, valid_ds
+    return train_ds, valid_ds
 
 
 def load_coords(coords_csv=MUCT_76):
