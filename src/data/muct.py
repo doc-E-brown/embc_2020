@@ -78,8 +78,8 @@ def load_tensors(data_dir, train_ratio=0.7, seed=0):
         x.append(_img)
         y.append(_mask)
 
-    x = np.array(x)
-    y = np.array(y)
+    x = np.array(x) / 255.
+    y = np.array(y) / 255.
 
     indices = list(range(len(x)))
     random.seed(seed)
