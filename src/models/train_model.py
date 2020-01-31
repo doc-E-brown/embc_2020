@@ -10,17 +10,19 @@ __author__ = 'Ben Johnston'
 import tensorflow as tf
 
 from src.models.model1 import model1, toymod
-from src.data.muct import load_data
+from src.data.muct import load_tensors
 from src.data import augment_data 
+
+from src.models.losses import dice_loss
 
 import numpy as np 
 
-train_data, valid_data = load_data(seed=0)
+train_data, valid_data = load_tensors(seed=0)
 train_data = train_data.shuffle(1000, seed=0).batch(32)
 valid_data = valid_data.batch(32)
 
-loss_object = tf.keras.losses.mean_squared_error
-optimizer = tf.keras.optimizers.SGD(learning_rate=0.01)
+loss_object = dice_loss 
+optimizer = tf.keras.optimizers.SGD(lr=0.1, momentum=0.95)
 
 model = model1()
 
@@ -47,9 +49,7 @@ for epoch in range(20):
     epoch_loss_avg = tf.keras.metrics.Mean()
 
     # batches
-    for x, y, z in train_data:
-
-        x, y = augment_data(x, y, z, jit_rate=10) 
+    for x, y in train_data:
 
         loss_val, grads = grad(model, x, y)
         optimizer.apply_gradients(zip(grads, model.trainable_variables))
@@ -59,9 +59,8 @@ for epoch in range(20):
     valid_loss_avg = tf.keras.metrics.Mean()
 
     # Validation data
-    for x, y, z in valid_data:
+    for x, y in valid_data:
 
-        x, y = augment_data(x, y, z, jit_rate=10) 
         loss_val = loss(model, x, y)
         valid_loss_avg(loss_val)
 

@@ -162,7 +162,7 @@ def augment_data(x, y, bbox, jit_rate=20, rate=0.5, size=100, seed=SEED):
 
 #     return x_adjust, y_aug
 
-def create_mask(y, width, height, radius=2):
+def create_mask(y, width, height, radius=5):
     
     mask = Image.new("L", (width, height))
     draw = ImageDraw.Draw(mask)

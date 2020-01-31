@@ -62,7 +62,7 @@ def load_data(dat_dir=EXTERNAL_DIR, nose_boxes=NOSE_BOXES, train_ratio=0.7, seed
     return x, y, z
 
 
-def load_tensors(data_dir, train_ratio=0.7, seed=0):
+def load_tensors(data_dir=MUCT_FEATURES, train_ratio=0.7, seed=0):
 
     x, y = [], []
 
@@ -78,8 +78,21 @@ def load_tensors(data_dir, train_ratio=0.7, seed=0):
         x.append(_img)
         y.append(_mask)
 
-    x = np.array(x) / 255.
-    y = np.array(y) / 255.
+    _xshape = list(x[0].shape)
+    _xshape.insert(0, len(x))
+
+    _yshape = list(y[0].shape)
+    _yshape.insert(0, len(y))
+
+    _x = np.zeros(_xshape, dtype=np.float32)
+    _y = np.zeros(_yshape, dtype=np.float32)
+
+    for idx in range(len(x)):
+        _x[idx] = x[idx]
+        _y[idx] = y[idx]
+
+    x = np.array(_x) / 255.
+    y = np.array(_y) / 255.
 
     indices = list(range(len(x)))
     random.seed(seed)
@@ -88,7 +101,6 @@ def load_tensors(data_dir, train_ratio=0.7, seed=0):
     num_train = int(len(x) * train_ratio)
     train_idx = indices[:num_train]
     valid_idx = indices[num_train:]
-
 
     train_ds = tf.data.Dataset.from_tensor_slices((
         tf.convert_to_tensor(x[train_idx], dtype=tf.float32),
@@ -130,7 +142,7 @@ def load_coords(coords_csv=MUCT_76):
             np.savetxt(savepath, coords_out)
 
 
-def generate_data(iters=15, size=200):
+def generate_data(iters=10, size=256):
 
     x, y, z = load_data()
 
