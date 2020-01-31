@@ -53,7 +53,7 @@ def load_data(dat_dir=EXTERNAL_DIR, nose_boxes=NOSE_BOXES, train_ratio=0.7, seed
 
             data[IMG].append(_img)
             data[LAB].append(_lab)
-            data[BBOX].append(bboxes[filename][:2])
+            data[BBOX].append(bboxes[filename])
 
     x = np.array(data[IMG])
     y = np.array(data[LAB])
@@ -112,7 +112,7 @@ def load_coords(coords_csv=MUCT_76):
             np.savetxt(savepath, coords_out)
 
 
-def generate_data(iters=10):
+def generate_data(iters=15, size=200):
 
     x, y, z = load_data()
 
@@ -120,21 +120,26 @@ def generate_data(iters=10):
 
         count = 0
 
-        for _x, _y, _z in zip(x, y, z):
+        for idx in range(len(x)):
+
+            _x, _y, _z = x[idx], y[idx], z[idx]
 
 
-            _x = _x.reshape((1, _x.shape[0], _x.shape[1], _x.shape[2]))
-            _y = _y.reshape((1, _y.shape[0], _y.shape[1]))
-            _z = _z.reshape((1, _z.shape[0]))
+            # _x = _x.reshape((1, _x.shape[0], _x.shape[1], _x.shape[2]))
+            # _y = _y.reshape((1, _y.shape[0], _y.shape[1]))
+            # _z = _z.reshape((1, _z.shape[0]))
 
-            _x, _y = augment_data(_x, _y, _z, size=200, jit_rate=20)
+            _x, _y = augment_data(_x, _y, _z, size=size, jit_rate=20)
 
-            width, height = _x[0].numpy().shape[:-1]
-            mask = create_mask(_y[0].numpy().astype(np.int), width, height)
+            width, height = _x.shape[:-1]
+            mask = create_mask(_y.astype(np.int), width, height)
 
             target_name = os.path.join(MUCT_FEATURES, f'{_iter}_{count}')
 
-            img = Image.fromarray(_x[0].numpy().astype(np.uint8))
+            img = Image.fromarray(_x.astype(np.uint8))
+
+            if np.any(_y < 0) or np.any(_y > size):
+                continue
 
             img.save(f'{target_name}.png')
             mask.save(f'{target_name}_mask.png')
