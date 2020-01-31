@@ -94,25 +94,10 @@ def load_tensors(data_dir=MUCT_FEATURES, train_ratio=0.7, seed=0):
     x = np.array(_x) / 255.
     y = np.array(_y) / 255.
 
-    indices = list(range(len(x)))
-    random.seed(seed)
-    random.shuffle(indices)
+    x = tf.convert_to_tensor(x, dtype=tf.float32)
+    y = tf.convert_to_tensor(y, dtype=tf.float32)
 
-    num_train = int(len(x) * train_ratio)
-    train_idx = indices[:num_train]
-    valid_idx = indices[num_train:]
-
-    train_ds = tf.data.Dataset.from_tensor_slices((
-        tf.convert_to_tensor(x[train_idx], dtype=tf.float32),
-        tf.convert_to_tensor(y[train_idx], dtype=tf.float32),
-    ))
-
-    valid_ds = tf.data.Dataset.from_tensor_slices((
-        tf.convert_to_tensor(x[valid_idx], dtype=tf.float32),
-        tf.convert_to_tensor(y[valid_idx], dtype=tf.float32),
-    ))
-
-    return train_ds, valid_ds
+    return x, y 
 
 
 def load_coords(coords_csv=MUCT_76):
@@ -142,7 +127,7 @@ def load_coords(coords_csv=MUCT_76):
             np.savetxt(savepath, coords_out)
 
 
-def generate_data(iters=10, size=256):
+def generate_data(iters=15, size=256):
 
     x, y, z = load_data()
 

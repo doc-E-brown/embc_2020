@@ -109,17 +109,13 @@ def model1(img_shape=(256, 256, 3)):
 
     model = tf.keras.Model(inputs=[input_tensor], outputs=[outputs])
 
+    model.compile(
+        loss=dice_loss,
+        optimizer=tf.keras.optimizers.SGD(lr=0.1, momentum=0.95),
+        metrics=[dice_coeff],
+    )
+
     return model
-
-#     model.compile(
-# #        loss='binary_crossentropy',
-#         loss=dice_loss,
-#         optimizer=tf.keras.optimizers.SGD(lr=0.1, momentum=0.95),
-# #        optimizer=optimizers.Adam(lr=0.3, epsilon=0.1),
-#         metrics=[dice_coeff],
-#     )
-
-#     return model, 'unet1'
     
 if __name__ == "__main__":
     model1()
