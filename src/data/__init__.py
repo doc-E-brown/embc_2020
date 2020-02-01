@@ -55,6 +55,24 @@ def jitter(x, y, bbox, jit_rate=5, size=100, seed=0):
     return np.array(img), y_crop
 
 
+def resize(x, y, size=256):
+
+    img = Image.fromarray(x.astype(np.uint8))
+    img = img.resize((size, size))
+
+    resize_ratio = size / x.shape[0]
+
+    mu_crop = y.mean(axis=0)
+    y -= mu_crop
+    y *= resize_ratio
+    y += (mu_crop * resize_ratio)
+
+    return np.array(img), y, resize_ratio
+
+
+
+
+
 
 # def jitter(x, y, bbox, jitter=30, size=100, seed=SEED):
     
@@ -179,3 +197,24 @@ def create_mask(y, width, height, radius=5):
         )
         
     return mask
+
+def find_coordinates(mask, threshold=255, min_sep=30):
+    
+    y_loc, x_loc = np.where(mask>=threshold)
+
+    max_diff = 0
+    for idx in range(len(x_loc) - 1):
+
+        diff = abs(x_loc[idx + 1] - x_loc[idx])
+
+        if  (diff > max_diff) and (diff >= min_sep):
+            max_diff = diff
+            diff_loc = idx
+            
+    y = np.zeros((2, 2), dtype=np.float32)
+    y[0,0] = x_loc[diff_loc + 1:].mean()
+    y[0,1] = y_loc[diff_loc + 1:].mean()    
+    y[1,0] = x_loc[:diff_loc + 1].mean()
+    y[1,1] = y_loc[:diff_loc + 1].mean()  
+    
+    return y
